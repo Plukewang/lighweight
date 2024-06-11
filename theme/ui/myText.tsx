@@ -2,7 +2,7 @@ import React from "react";
 import { Text } from "react-native";
 
 
-import { textProps } from "../types/text";
+import { textProps } from "../../types/text";
 
 export const MyText = ({children, size, highlight, align}: textProps)=> {
 

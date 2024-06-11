@@ -1,15 +1,22 @@
 import { useState } from 'react';
 import { Screen1Props } from '../types/app';
-import { StyleSheet, Text, Pressable, ScrollView, View} from 'react-native';
+import { View} from 'react-native';
 
-import { getAuth, signOut } from "firebase/auth";
 import { Loading } from './loading';
 
-import { NavigationContainer } from '@react-navigation/native';
+
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 
-import { Settings } from './home/settings';
+
+
+import { Cycle } from './home/cycle';
+import { Today } from './home/today';
 import { styles } from '../theme/homestyle';
+import { Ionicons } from '@expo/vector-icons';
+import { Entypo } from '@expo/vector-icons';
+
+import { SettingStack } from './home/settingStack';
+
 
 export const Home = ({navigation, route}:Screen1Props) =>{
     const Tab = createBottomTabNavigator();
@@ -31,11 +38,46 @@ export const Home = ({navigation, route}:Screen1Props) =>{
                 }}
                 >
                     <Tab.Screen 
-                    name = 'Settings' 
-                    component={Settings}
+                    name = 'Today' 
+                    component={Today}
+                    options={{
+                        tabBarLabel: 'Today',
+                        tabBarIcon: ()=>(<Ionicons name="today" size={24} color="black" />),
+                        tabBarLabelStyle: {color: 'black'},
+                        tabBarStyle:{
+                            display: 'flex',
+                            flexDirection: 'column'
+
+                        }
+                    }}/>
+                    <Tab.Screen 
+                    name = 'Cycle' 
+                    component={Cycle}
+                    options={{
+                        tabBarLabel: 'Cycle',
+                        tabBarIcon: ()=>(<Entypo name="bar-graph" size={24} color="black" />),
+                        tabBarLabelStyle: {color: 'black'},
+                        tabBarStyle:{
+                            display: 'flex',
+                            flexDirection: 'column'
+
+                        }
+                    }}/>
+                    <Tab.Screen 
+                    name = 'SettingStack' 
+                    component={SettingStack}
                     options={{
                         tabBarLabel: 'Settings',
+                        tabBarIcon: ()=>(<Ionicons name="settings" size={24} color="black" />),
+                        tabBarLabelStyle: {color: 'black'},
+                        tabBarStyle:{
+                            display: 'flex',
+                            flexDirection: 'column'
+
+                        }
                     }}/>
+                    
+                    
                 </Tab.Navigator>
     )
 }

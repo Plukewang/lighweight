@@ -1,20 +1,27 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { LoginProps } from '../types/app';
 import {  View, TouchableHighlight, Image, TextInput, Text, Alert} from 'react-native';
 import { styles } from '../theme/loginstyle';
-import { MyText } from '../theme/myText';
+import { MyText } from '../theme/ui/myText';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 //import { app } from '../src/firebase.config';
 
 import { auth } from '../src/firebase.config';
-
+import { ResetPassword } from '../modals/resetPassword';
 
 export const Login = ({navigation, route}:LoginProps) =>{
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+
+    //password reset controller
+    const [resetPassword, setResetPassword] = useState<boolean>(false);
+
+    //autofocus login button on web
+    const loginRef = useRef<TouchableHighlight>(null);
+    const passwordRef = useRef<TextInput>(null);
 
     interface userProps{
         email:string
@@ -43,10 +50,13 @@ export const Login = ({navigation, route}:LoginProps) =>{
                 case 'auth/too-many-requests':
                     setError('Too many login attempts. Try again later.');
                     break;
+                default: 
+                    setError('Sign in error. Try again.');
+                    break;
             }
-            setError('Sign in error. Try again.');
             console.error(error)
             Alert.alert(error);
+            navigation.navigate('Login');
         }
     }
 
@@ -79,19 +89,28 @@ export const Login = ({navigation, route}:LoginProps) =>{
             <TextInput
                 placeholder='Email'    
                 style = {styles.inputs}
+                keyboardType='email-address'
                 onChangeText={(text) => { 
                     setEmail(text);
                   }}
                   value = {email}
+                  onSubmitEditing={()=>{
+                    passwordRef.current && passwordRef.current.focus();
+                }}
             />
 
             <TextInput
                 placeholder='Password'
+                secureTextEntry={true}
                 style = {styles.inputs}
                 onChangeText={(text) => { 
                     setPassword(text);
                   }}
-                  value = {password}
+                value = {password}
+                ref = {passwordRef}
+                onSubmitEditing={()=>{
+                    loginRef.current && loginRef.current.focus();
+                }}
             />
 
 
@@ -103,6 +122,7 @@ export const Login = ({navigation, route}:LoginProps) =>{
                 style={
                     styles.login
                 }
+                ref={loginRef}
                 >
                 
                 <Text
@@ -131,7 +151,23 @@ export const Login = ({navigation, route}:LoginProps) =>{
                 underlayColor={'#767673'}
                 style={{borderRadius:8}}
             >
-                <Text>Already have an account? <Text style={{color: 'blue'}}>Sign Up Here</Text></Text>
+                <Text>Don't have an account? <Text style={{color: 'blue'}}>Sign Up Here</Text></Text>
+            </TouchableHighlight>
+
+            <ResetPassword
+                control={resetPassword}
+                close={()=>setResetPassword(false)}
+            />
+
+            <TouchableHighlight
+                onPress={
+                    //opens the reset password modal
+                    ()=>setResetPassword(true)
+                }
+                underlayColor={'#767673'}
+                style={{borderRadius:8}}
+            >
+                <Text style={{color: 'blue'}}>Forgot Password?</Text>
             </TouchableHighlight>
 
         </View>

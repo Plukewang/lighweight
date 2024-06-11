@@ -1,7 +1,7 @@
 import { RegisterProps } from '../types/app';
 import { TextInput, TouchableHighlight, Text, View, Image, Alert } from 'react-native';
 import { styles } from '../theme/loginstyle';
-import { MyText } from '../theme/myText';
+import { MyText } from '../theme/ui/myText';
 import { useState } from 'react';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 //for auth
@@ -83,6 +83,7 @@ export const Register = ({navigation, route}:RegisterProps) =>{
     <TextInput
           placeholder='Email'    
           style = {styles.inputs}
+          keyboardType='email-address'
           onChangeText={(text) => { 
             setEmail(text);
           }}
@@ -129,12 +130,14 @@ export const Register = ({navigation, route}:RegisterProps) =>{
       </TouchableHighlight>
         
       <Text
-                style={{
-                    color: 'red',
-                }}
-            >
+        
+        style={{
+            color: 'red',
+        }}
+        >
+            {/* error display message */}
                 {error}
-            </Text>
+        </Text>
 
       <TouchableHighlight
         onPress={()=>{

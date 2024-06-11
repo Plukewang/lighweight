@@ -3,6 +3,6 @@ import { ActivityIndicator, View } from "react-native"
 
 export const Loading = ()=>{
     return (<View>
-        <ActivityIndicator size='large'/>
+        <ActivityIndicator size='large' color={'black'}/>
     </View>)
 }
