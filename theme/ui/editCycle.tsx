@@ -6,25 +6,33 @@ import { editCycleProps } from "../../types/ui";
 import { useCycleListStore, useCycleStore } from "../../src/trainingCycleTemplateStore";
 import { AreYouSure } from "../../modals/areYouSure";
 import { MyText } from "./myText";
-import { CycleStats } from "./cycleStats";
 import { useEffect, useState } from "react";
 import { BuildTrainingCycle, Trainingcycle } from "../../src/exercises";
 import { deleteUserCycle } from "../../src/readwrite";
+import { UseAppStateStore } from "../../src/globalAppState";
+import { CycleSummary } from "../../modals/cycleSummary";
+
+
 export const EditCycle = ({name, update, num}: editCycleProps):JSX.Element =>{
+    const [theme, switchTheme] = [UseAppStateStore((state)=>state.theme), UseAppStateStore((state)=>state.switchTheme)]
+    const currBackgroundColor = theme === 'Light'? 'white' : '#282828'
+    const currTextColor = theme === 'Light'? 'black' : '#F3F3F3'
+    const [summary, openSummary] = useState(false) //control the cycle summary page
 
     const removeName = useCycleListStore((state)=>state.removeCycleName)
     const changeActive = useCycleListStore((state)=>state.changeActive)
     const active =  useCycleListStore((state)=>state.active)
 
     const cycleSets= useCycleStore((state)=>state.totalSets)
-    const cycleDate = useCycleStore((state)=>state.startDate)
-    const cycleWeeks = useCycleStore((state)=>state.weeks)
 
+    const cycleWeeks = useCycleStore((state)=>state.weeks)
+    const cycleWorkouts = useCycleStore((state)=>state.workoutScheme)
 
     const [thisCycle, setThisCycle] = useState(BuildTrainingCycle());
 
     const cycle = useCycleStore((state)=>state.loadCycle)
     const clearCycle = useCycleStore((state)=>state.clearCycle)
+    const currProgress = useCycleStore((state)=>state.progress)/(cycleWeeks*cycleWorkouts.length)
     
     useEffect(()=>{
         async function getCycle(){
@@ -40,42 +48,73 @@ export const EditCycle = ({name, update, num}: editCycleProps):JSX.Element =>{
     return(
         <View
             style={{
+                height: 100,
+                marginBottom: 50,
+            }}
+        >
+
+        <View
+            style={{
                 gap: 0,
-                height: 100
+                height: 100, 
+                shadowColor: currTextColor,
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.8,
+                shadowRadius: 5,  
+                elevation: 5,
             }}
         >
             <AreYouSure
                 warning='Start this training cycle?'
+                exception={()=>{return num!==active}}
                 action={()=>{
                     changeActive(num)
+                    
                 }}
             >
                 <View
                     style={{
                         flexDirection: 'row',
-                        gap: 10,
                         flexWrap: 'wrap',
                         alignItems: 'center',
                         alignSelf: 'center',
                         justifyContent: 'space-between',
                         width: '100%',
                         height: 100,
-                        backgroundColor: active != num? '#F3F3F3' : 'white',
+                        backgroundColor: currBackgroundColor,
+                        borderWidth: 2,
+                        borderColor: currTextColor,
                         padding: 10,
                         borderRadius: 8,
-                        borderBottomLeftRadius: 0,
-                        borderBottomRightRadius: 0,
                     }}
                 >
                     <View>
-                    <MyText size={20} highlight={active === num} align="left">{name}</MyText>
-                    <Text>{cycleSets} Weekly Sets</Text>
+                    <MyText size={20} highlight={num === 0} align="left">{name}</MyText>
+                    <Text style={{color: currTextColor}}>{cycleSets} Weekly Sets</Text>
                     </View>
 
                     
                     <View style={{
-                        flexDirection:'row'
-                    }}>
+                        flexDirection:'row',
+                        flexWrap: 'wrap',
+                        }}
+                    >
+                        <Pressable
+                            style={{
+                                padding: 10,
+                                justifyContent: 'center',
+
+                            }}
+                            onPress={()=>{
+                                openSummary(true)
+                            }}
+                        >
+                            <AntDesign name="questioncircle" size={24} color={currTextColor} />
+                            <CycleSummary control = {summary} close = {()=>{
+                                openSummary(false)
+                            }}/>
+                        </Pressable>
+                        
                         <Pressable
                             style={{
                                 padding: 10,
@@ -84,12 +123,13 @@ export const EditCycle = ({name, update, num}: editCycleProps):JSX.Element =>{
                             }}
                             onPress={
                                 async():Promise<void>=>{
-                                    if(name) {const result = await getTrainingCycle(name);}
                                     update();
+                                    if(name) {const result = await getTrainingCycle(name);}
+                                    
                                 }
                             }
                         >
-                            <AntDesign name="edit" size={24} color="gray" />
+                            <AntDesign name="edit" size={24} color={currTextColor} />
                         </Pressable>
                         <View
                             style={{
@@ -110,18 +150,25 @@ export const EditCycle = ({name, update, num}: editCycleProps):JSX.Element =>{
 
                             >
                                 
-                                <AntDesign name="delete" size={24} color="gray" />   
+                                <AntDesign name="delete" size={24} color={currTextColor} />   
                                 
                             </AreYouSure>
+                            
                         </View>
                         
                     </View>
+                               
+                    <View style={{ width:'100%', height: 5}}>
+                        <View style={{margin:0, padding: 0, backgroundColor: '#ECC640', height: '100%', width: `${(currProgress+0.01)*100}%`}}></View>
+                    </View>   
                     
                 </View>
             </AreYouSure>
-
-            <CycleStats cycle={thisCycle}/>
-            </View>
+            
+            
+        </View>
+        </View>
+        
         
     )
 }

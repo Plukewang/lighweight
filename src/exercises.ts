@@ -134,6 +134,41 @@ export function ExerciseProg(
         setList
     })
 }
+export function updateExerciseTargets(exerciseprog: Exerciseprog, weight: number, reps: number): Exerciseprog{
+    
+    return ExerciseProg(
+        exerciseprog.exercise,
+        exerciseprog.startingIntensity,
+        reps-exerciseprog.repProgression,
+        weight-exerciseprog.weightProgression,
+        exerciseprog.weightProgression,
+        exerciseprog.repProgression,
+        exerciseprog.repRange,
+        exerciseprog.weightIncrement,
+        exerciseprog.sets,
+        exerciseprog.weeks,
+        exerciseprog.setType,
+    )
+}
+
+export function progressExercise(exerciseprog: Exerciseprog, newWeight: number, newReps: number): Exerciseprog{
+    
+
+    return ExerciseProg(
+        exerciseprog.exercise,
+        exerciseprog.startingIntensity,
+        exerciseprog.startingReps,
+        exerciseprog.startingWeight,
+        newWeight-exerciseprog.startingWeight,
+        newReps-exerciseprog.repProgression,
+        exerciseprog.repRange,
+        exerciseprog.weightIncrement,
+        exerciseprog.sets,
+        exerciseprog.weeks,
+        exerciseprog.setType,
+    )
+}
+
 /**
  *  Types, constructor, and auxiliary methods for the workout, which is a list of Exerciseprogs and an associated weekday.
  */
@@ -272,6 +307,7 @@ export type Trainingcycle = {
     workoutScheme: Workout[]
     currentWeek: number
     totalsets: number
+    progress: number
 }
 
 export function TrainingCycle(startDate1: string, weeks1:number, workoutScheme1: Workout[], name1: string, currentWeek1: number): Trainingcycle{
@@ -281,6 +317,7 @@ export function TrainingCycle(startDate1: string, weeks1:number, workoutScheme1:
     let workoutScheme=workoutScheme1 ? workoutScheme1 : Array(7).fill(WorkOut([], 'Mon'))//creates empty workout scheme if there are no provided workouts.
     let currentWeek = currentWeek1
     let totalsets = getTotalSets(workoutScheme);
+    let progress = 0
 
     return({
         name,
@@ -288,7 +325,8 @@ export function TrainingCycle(startDate1: string, weeks1:number, workoutScheme1:
         weeks,
         workoutScheme,
         currentWeek,
-        totalsets
+        totalsets,
+        progress
     })
     
 }
@@ -307,4 +345,16 @@ export function getTotalSets(workouts: Workout[]): number{
         }
     }
     return ans;
+}
+
+export function getAllProgressions(workouts: Workout[]): any[]{
+    let ans:any = []
+    for(const workout of workouts){
+        for(const exercise of workout.exercises){
+            let weightMax = exercise.setList.setList[exercise.setList.setList.length-1][0].weight || exercise.startingWeight
+            let repMax = exercise.setList.setList[exercise.setList.setList.length-1][0].reps || exercise.startingReps
+            ans.push({name: exercise.exercise.name, weight: weightMax-exercise.startingWeight, reps: repMax-exercise.startingReps})
+        }
+    }
+    return ans
 }

@@ -3,6 +3,7 @@ import { Pressable, Modal, Text, View } from "react-native";
 import { useState } from "react";
 import { Ionicons } from '@expo/vector-icons';
 import { MaterialIcons } from '@expo/vector-icons';
+import { UseAppStateStore } from "../../src/globalAppState";
 
 interface calendarProps{
     variable: string
@@ -15,6 +16,10 @@ export const CalendarInput = ({variable, setter}: calendarProps ) =>{
 
     const [open, setOpen] = useState<boolean>(false);
     const [date, setDate] = useState<string>(currentDateString);
+
+    const [theme, switchTheme] = [UseAppStateStore((state)=>state.theme), UseAppStateStore((state)=>state.switchTheme)]
+    const currBackgroundColor = theme === 'Light'? 'white' : '#282828'
+    const currTextColor = theme === 'Light'? 'black' : '#F3F3F3'
 
     return(
         <View> 
@@ -37,7 +42,7 @@ export const CalendarInput = ({variable, setter}: calendarProps ) =>{
                         justifyContent: 'space-between'
                     }}
                 >
-                    <Text style= {{alignSelf: 'center'}}   >{date}</Text>
+                    <Text style= {{alignSelf: 'center', color: currTextColor}}   >{date}</Text>
 
                     <Calendar
                         onDayPress={(day)=>{
@@ -57,7 +62,7 @@ export const CalendarInput = ({variable, setter}: calendarProps ) =>{
                         onPress={()=>setOpen(false)}
                         style= {{alignSelf: 'center', padding: 10}}    
                     >
-                        <Text><Ionicons name="exit-outline" size={24} color="gray" /></Text>
+                        <Text><Ionicons name="exit-outline" size={24} color={'gray'} /></Text>
                     </Pressable>
                 </View>
             </Modal>
@@ -71,7 +76,7 @@ export const CalendarInput = ({variable, setter}: calendarProps ) =>{
                     alignItems: 'center',
                 }}
             >
-                <Text>Starting Date: {variable}</Text>
+                <Text style={{color: currTextColor}}>Starting Date: {variable}</Text>
                 <MaterialIcons name="edit-calendar" size={24} color="gray" />
             </Pressable>
             

@@ -109,9 +109,9 @@ export async function deleteUserCycle(cycleName: string){
     if(auth.currentUser){
         const convertedName = cycleName.split(' ').join('');
         try{
-            console.log(convertedName)
+            //console.log(convertedName)
             const result = await deleteDoc(doc(db, `users/${userEmail}/trainingCycles`, convertedName))
-            console.log('success')
+            //console.log('success')
         }catch(error){
             throw(error)
         }
@@ -123,13 +123,15 @@ export async function deleteUserCycle(cycleName: string){
 
 export async function readUserCycles(): Promise<any>{
     if(auth.currentUser){
-        const out: Trainingcycle[] = [];
+        
         try{
             const trainingCyclesRef = collection(db, `users/${auth.currentUser.email}/trainingCycles`) //reference to the collections trainingCycles which contain the training cycles
             const result = await getDocs(trainingCyclesRef)//first get the results.
             //result is an array of documents where the id is the name and the data are the fields.
             if(result){
-                result.forEach( async (doc)=>{
+                const out: Trainingcycle[] = [];
+
+                for(const doc of result.docs){
                     const cycleData= doc.data()
                     const emptyCycle: Workout[] = []
                     //to store all the read data.
@@ -138,9 +140,7 @@ export async function readUserCycles(): Promise<any>{
                     const workoutRef = collection(db, `users/${userEmail}/trainingCycles/${doc.data().name}/workoutScheme`) //reference to the collections workoutScheme
                     const workoutDocs = await getDocs(workoutRef)
 
-                    
-
-                    workoutDocs.forEach(async (workoutDoc)=>{
+                   for(const workoutDoc of workoutDocs.docs){
                         const workoutData = workoutDoc.data();
                         //we have to grab the exercises too. Thank god this project is small. 
                         const dayRef = collection(db, `users/${userEmail}/trainingCycles/${doc.data().name}/workoutScheme/${workoutData.day}`) //reference to each individual day's collection of exercises.
@@ -148,7 +148,7 @@ export async function readUserCycles(): Promise<any>{
 
                         const emptyWorkout: Exerciseprog[] = []//for filling in the exercises.
 
-                        dayDocs.forEach(exercise=>{//truncated exercise object. Same as exerciseprog but with no setlist
+                        for(const exercise of dayDocs.docs){//truncated exercise object. Same as exerciseprog but with no setlist
                             //uh oh we have to build a exerciseprog object.
                             const exData = exercise.data()
                             const readExercise = ExerciseProg(
@@ -166,14 +166,16 @@ export async function readUserCycles(): Promise<any>{
 
                             )
                             emptyWorkout.push(readExercise)//add it to the empty workouts list for the day
-                        })
-                    emptyCycle.push(WorkOut(emptyWorkout,workoutData.day))
-                    })
-                    out.push(TrainingCycle(cycleData.startDate, cycleData.weeks, emptyCycle, cycleData.name, 1))
-                })
-                
+                        }
+                        emptyCycle.push(WorkOut(emptyWorkout,workoutData.day))
+                    }
+                    
+                    let newCycle = TrainingCycle(cycleData.startDate, cycleData.weeks, emptyCycle, cycleData.name, 1)
+                    out.push(newCycle)
+                }
+                //console.log(out)
+                return out
             }
-            return out
         }catch(error){
             console.log(error)
             return [];

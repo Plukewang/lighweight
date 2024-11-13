@@ -9,6 +9,7 @@ export interface areYouSureProps{
     warning: string,
     action: ()=>void
     children: JSX.Element
+    exception?: ()=> boolean
 }
 
 export interface addSessionprops{
@@ -42,7 +43,7 @@ export interface editExerciseProps{
 }
 
 export interface cycleStatsProps{
-    cycle: Trainingcycle
+    cycle: Workout[]
 }
 //for the cycle store for zustand
 
@@ -53,9 +54,11 @@ export type CycleState={
     weeks: number
     workoutScheme: Workout[]
     totalSets: number
+    progress: number
 }
 
 export type CycleAction={
+    updateProgress: () =>void,
     updateCycleName:(name: CycleState['name'])=>void
     updateCycleStartingDate:(startDate: CycleState['startDate'])=>void
     updateCycleWeeks:(weeks: CycleState['weeks'])=>void
@@ -66,7 +69,7 @@ export type CycleAction={
     updateSessionExercise: (exercise: Exerciseprog, day: Workout['day'],id: number)=>void //replace the exercise entirely.
     loadCycle: (cycle: Trainingcycle) =>void
     clearCycle: ()=>void
-
+    resetProgress: ()=>void
 }
 
 //for the training cycle list store in zustand
@@ -81,4 +84,5 @@ export type CycleListAction={
     updateCycleName: (newName: Trainingcycle['name'], key: number)=>void
     addCycleName: (name: Trainingcycle['name'])=>void
     removeCycleName: (name: Trainingcycle['name'])=>void
+    syncCycleList: (list: string[])=>void
 }

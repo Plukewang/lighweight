@@ -3,6 +3,7 @@ import { create } from "zustand"
 import { Workout, Exerciseprog, TrainingCycle, Trainingcycle, BuildWorkout, getTotalSets } from "./exercises";
 import { getTrainingCycle, saveTrainingCycle } from "./asyncLayer";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { State } from "react-native-gesture-handler";
 
 const date = new Date();
 const dateString = date.toISOString().split('T')[0];
@@ -10,11 +11,14 @@ const dateString = date.toISOString().split('T')[0];
 
 
 export const useCycleStore = create<CycleState & CycleAction>()((set)=>({
-    name: 'Default Cycle',
+    name: 'Training Cycle ' + dateString,
     startDate: dateString,
     weeks: 4,
     workoutScheme: [],
     totalSets: 0,
+    progress: 0,
+    updateProgress: ()=>set((state)=>({progress: state.progress+1})),
+    resetProgress: ()=>set(()=>({progress: 0})) ,
     /**
      * Update basic identification information for the training cycle
      * 
@@ -76,7 +80,8 @@ export const useCycleStore = create<CycleState & CycleAction>()((set)=>({
         startDate: cycle.startDate,
         weeks: cycle.weeks,
         workoutScheme: cycle.workoutScheme,
-        totalsets: cycle.totalsets
+        totalsets: cycle.totalsets,
+        progress: 0,
     })),
     clearCycle: ()=> set((state)=>({
         name: 'Default Cycle',
@@ -89,8 +94,10 @@ export const useCycleStore = create<CycleState & CycleAction>()((set)=>({
 export const useCycleListStore = create<CycleListState & CycleListAction>()((set)=>({
     cycles: [],
     active: 0,
-    changeActive:(num: number)=>set(()=>({
-        active: num
+    changeActive:(num: number)=>set((state)=>({
+
+        cycles: [state.cycles[num], ...state.cycles.filter((x,i)=>i!==num)],
+        active: num,
     })),
     updateCycleName: (newName: Trainingcycle['name'], key: number) => set((state)=>({//update a name in reference and in place
         cycles: state.cycles.map((cycle,i:number)=>{
@@ -104,5 +111,8 @@ export const useCycleListStore = create<CycleListState & CycleListAction>()((set
     removeCycleName: (name: Trainingcycle['name']) => set((state)=>({
         cycles: state.cycles.filter(cycle=>cycle!==name)
     })),
+    syncCycleList: (list: string[])=> set(()=>({
+        cycles: list
+    }))
 
 }))

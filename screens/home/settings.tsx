@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { SettingProps } from "../../types/home/home";
 import { View, Pressable, Text, Modal, TextInput, Alert } from "react-native";
-import {styles} from "../../theme/homestyle"
+import {styles, darkstyles} from "../../theme/homestyle"
 import { Loading } from "../loading";
-import { EmailAuthProvider, getAuth, reauthenticateWithCredential, signInWithEmailAndPassword, signOut, updatePassword} from "firebase/auth";
+import { EmailAuthProvider, getAuth, reauthenticateWithCredential, signOut, updatePassword} from "firebase/auth";
 import { SetProfile } from "../../modals/setNickname";
 import { SettingsButton } from "../../theme/ui/settingsbutton";
 import { AreYouSure } from "../../modals/areYouSure";
 import { errorHandler } from "../../src/authCredentialErrorHandler";
 
+import { UseAppStateStore } from "../../src/globalAppState";
 export const Settings = ({navigation, route}:SettingProps) =>{
 
     const [loading, setLoading] = useState<boolean>(false);//loading activity tracker
@@ -20,7 +21,12 @@ export const Settings = ({navigation, route}:SettingProps) =>{
 
     const auth = getAuth();
     const user = auth.currentUser;
-
+    const offlineStatus = UseAppStateStore((state=>state.offline))
+    const changeOfflineStatus = UseAppStateStore((state)=>state.changeOnlineStatus)
+    const switchTheme = UseAppStateStore((state)=>state.switchTheme)
+    const themeStatus = UseAppStateStore((state)=>state.theme)
+    const currStyle = themeStatus ==='Dark'? darkstyles : styles 
+    
     const changePassword = async () =>{
         //submission for changing a password
         try{
@@ -63,13 +69,13 @@ export const Settings = ({navigation, route}:SettingProps) =>{
         
     }
     if(loading) return (
-        <View style={styles.container}> 
+        <View style={currStyle.container}> 
           <Loading/>
         </View>
-    
+     
     )
     return(
-        <View style={styles.account}>
+        <View style={ themeStatus ==='Light'? currStyle.account : currStyle.account}>
 
             <SetProfile />
 
@@ -86,12 +92,12 @@ export const Settings = ({navigation, route}:SettingProps) =>{
                         backgroundColor: 'rgba(52, 52, 52, 0.8)',
                     }}
                 >
-                <View style={styles.modal}>
+                <View style={currStyle.modal}>
                     <Text style={{textAlign: 'center', fontSize: 16, color: 'black'}}>Enter Current Password</Text>
                     <TextInput
                         placeholder='...'    
                         secureTextEntry={true}
-                        style = {styles.inputs}
+                        style = {currStyle.inputs}
                         onChangeText={(text) => { 
                             setOldPassword(text);
                           }}
@@ -102,7 +108,7 @@ export const Settings = ({navigation, route}:SettingProps) =>{
                     <TextInput
                         placeholder='...'    
                         secureTextEntry={true}
-                        style = {styles.inputs}
+                        style = {currStyle.inputs}
                         onChangeText={(text) => { 
                             setPassword(text);
                           }}
@@ -113,7 +119,7 @@ export const Settings = ({navigation, route}:SettingProps) =>{
                     <TextInput
                         placeholder='...'    
                         secureTextEntry={true}
-                        style = {styles.inputs}
+                        style = {currStyle.inputs}
                         onChangeText={(text) => { 
                             setConfirmPassword(text);
                           }}
@@ -128,7 +134,7 @@ export const Settings = ({navigation, route}:SettingProps) =>{
                     </Text>
                     {/* this tests for errors and then passes it to firebase to update the new password*/}
                     <Pressable
-                            style={styles.modalButton}
+                            style={currStyle.modalButton}
                         >
                     <AreYouSure
                         warning="Change password?"
@@ -151,7 +157,7 @@ export const Settings = ({navigation, route}:SettingProps) =>{
                             setpasswordModalVisible(false)
                             setOldPassword('')
                         }}
-                        style={styles.modalButton}
+                        style={currStyle.modalButton}
                     >
                         <Text style={{textAlign: 'center', fontSize: 16, color: 'black'}}>Close</Text>
                     </Pressable>
@@ -159,32 +165,23 @@ export const Settings = ({navigation, route}:SettingProps) =>{
                 </View>
             </Modal>
             {/* The tabs for navigation */}
-            <View style={styles.settingsTabs}>
+            <View style={currStyle.settingsTabs}>
 
                 <SettingsButton press = {//TODO: Add this page
                     ():void => {
-                        navigation.navigate('Personalize');
+                        switchTheme()
                     } 
                 }
-                buttonTitle = 'Personalize'/>
+                buttonTitle = {themeStatus==='Light'? 'Dark Mode':'Light Mode'}/>
 
                 <SettingsButton press = {//TODO: Add this page
                     ():void => {
-                        navigation.navigate('Legal');
+                        changeOfflineStatus()
                     } 
                 }
-                buttonTitle = 'Legal'/>
+                buttonTitle = {offlineStatus?  'Go online': 'Go offline'}/>
 
-                <SettingsButton 
-                    buttonTitle="Sign Out"
-                    press={async ()=>{
-                        //navigate to login
-                        const auth = getAuth();
-                        setLoading(true);
-                        await signOut(auth);
-                        setLoading(false);
-                    }}
-                />
+                
                 {/*
                     Sign out button. TODO: Investigate loading potential.
                 */}
@@ -193,6 +190,18 @@ export const Settings = ({navigation, route}:SettingProps) =>{
                     buttonTitle="Change Password"
                     press = {async ()=>{
                         setpasswordModalVisible(true);
+                    }}
+                />
+
+                <SettingsButton 
+                    buttonTitle="Sign Out"
+                    important
+                    press={async ()=>{
+                        //navigate to login
+                        const auth = getAuth();
+                        setLoading(true);
+                        await signOut(auth);
+                        setLoading(false);
                     }}
                 />
             </View>

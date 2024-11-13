@@ -4,13 +4,16 @@ import { AnalyzeWorkout, Workout, createVolumes, Volumes } from "../../src/exerc
 import { View, Pressable, Text } from "react-native"
 import { ScrollView } from "react-native-gesture-handler";
 import { Feather } from '@expo/vector-icons';
+import { UseAppStateStore } from "../../src/globalAppState";
 
 export const CycleStats = ({cycle}: cycleStatsProps): JSX.Element =>{
+    const [theme, switchTheme] = [UseAppStateStore((state)=>state.theme), UseAppStateStore((state)=>state.switchTheme)]
+    const currBackgroundColor = theme === 'Light'? 'white' : '#282828'
+    const currTextColor = theme === 'Light'? 'black' : '#F3F3F3'
+    const currBorderColor = theme === 'Light'? 'black' : '#404040'
 
-    const [open, setOpen] = useState(false)
-
-    const workoutScheme = cycle.workoutScheme;
-    const weeklyVolumes = workoutScheme.map((workout: Workout, i: number)=>{//get an array of volumes for each day of the week to receeive a workout volume object.
+    const workoutScheme = cycle
+    const weeklyVolumes = workoutScheme?.map((workout: Workout, i: number)=>{//get an array of volumes for each day of the week to receeive a workout volume object.
         return AnalyzeWorkout(workout);
     })
 
@@ -25,66 +28,56 @@ export const CycleStats = ({cycle}: cycleStatsProps): JSX.Element =>{
         return Object.fromEntries(aKeys) as Volumes
     }
 
-    const totals = weeklyVolumes.reduce(accumulator, createVolumes())//use the above function to reduce to a single Volumes object.
+    const totals = weeklyVolumes?.reduce(accumulator, createVolumes())//use the above function to reduce to a single Volumes object.
+
+    
     return(
     <View
         style={{
-            width: '100%',
-            height: 200,
+            width: 350,
+            height: 300,
             flexDirection: 'column',
             justifyContent: 'flex-start',
-            
+            margin: 10,
         }}
     >
-        <Pressable
-            onPress={()=>{
-                setOpen(!open)
-            }}
-            style={{
-                width: '100%',
-                alignItems: 'center',
-                alignSelf: 'center',
-                backgroundColor: 'white',
-                borderBottomLeftRadius: open? 0 : 8,
-                borderBottomRightRadius: open? 0: 8,
-            }}
-        >
-            <Feather name="chevrons-down" size={24} color="gray"/>
-        </Pressable>
+        
         <View
             style={{
                 flexDirection: 'column',
                 justifyContent: 'space-evenly',
                 width: '100%',
-                height: open? '100%': 0,
-                backgroundColor: 'white',
-                borderBottomEndRadius: 8,
-                borderBottomLeftRadius: 8,
+                height: '100%',
+                backgroundColor: currBackgroundColor,
+                borderRadius: 8,
+                borderWidth: 2,
+                borderColor: currBorderColor,
+
             }}
         >
+            <Text style={ { margin: 10, textAlign: 'center', fontSize: 16,color: currTextColor}}>Sets per muscle</Text>
+            <View
+                style={{margin: 10,flexDirection: 'row', justifyContent: 'space-between'}}
+            >
+                <Text style={{fontWeight: 'bold', color: currTextColor}}>Muscle</Text>
+                <Text style={{fontWeight: 'bold', color: currTextColor}}>Sets</Text>
+            </View>
             <ScrollView 
                 style={{
                     margin: 10,
-                    paddingLeft: 10,
-                    paddingRight: 10,
+                    marginBottom: 50
                 }}
             >   
-                 <Text style={{textAlign: 'center', fontSize: 16,}}>Sets per muscle</Text>
-                 <View
-                    style={{flexDirection: 'row', justifyContent: 'space-between'}}
-                >
-                    <Text style={{fontWeight: 'bold'}}>Muscle</Text>
-                    <Text style={{fontWeight: 'bold'}}>Sets</Text>
-                 </View>
+                 
                 {
-                    Object.entries(totals).map(([key,value], i:number)=>{
-                        if (value > 0) return (
+                    totals&& Object.entries(totals)?.map(([key,value], i:number)=>{
+                         return (
                         <View
                             key={i}
                             style={{flexDirection: 'row', justifyContent: 'space-between'}}
                         >
-                            <Text>{(key.charAt(0).toLocaleUpperCase()+key.slice(1) ).replace(/([a-z](?=[A-Z]))/g, '$1 ')}</Text>
-                            <Text>{value}</Text>
+                            <Text style={{color: currTextColor}}>{(key.charAt(0).toLocaleUpperCase()+key.slice(1) ).replace(/([a-z](?=[A-Z]))/g, '$1 ')}</Text>
+                            <Text style={{color: currTextColor}}>{value}</Text>
                         </View>
                         )
                     })

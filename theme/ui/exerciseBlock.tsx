@@ -3,25 +3,40 @@ import { MyText } from "./myText";
 import { EditableInput } from "./editableInput";
 import { WeightSelect } from "./weightSelect";
 import { Exerciseprog, addSet, removeSet } from "../../src/exercises";
-import { styles } from "../sessionstyle";
+import { styles, darkstyles } from "../sessionstyle";
 import { useState } from "react";
 import { Ionicons } from '@expo/vector-icons';
 import { setInfo } from "../../src/exercises";
+import { UseAppStateStore } from "../../src/globalAppState";
+import { AreYouSure } from "../../modals/areYouSure";
+import { useCycleStore } from "../../src/trainingCycleTemplateStore";
+
+
 interface ExerciseBlockProps{
     exercise: Exerciseprog
+    week: number
     updateSet: (set: setInfo[])=>void
+    day: string
+    id: number
+    updateTargets: (weight: number, reps: number) =>void
 }
 
-export const ExerciseBlock = ({exercise, updateSet}: ExerciseBlockProps): JSX.Element =>{
+export const ExerciseBlock = ({exercise, week, updateSet, updateTargets, day, id}: ExerciseBlockProps): JSX.Element =>{
 
     const [set, setSet] = useState(exercise.setList.setList[exercise.currentWeek])//get the setlist from the exercise progression.
     const [done,setDone] = useState<boolean>(false);
 
-    const expectedWeight = exercise.weightProgression+exercise.startingWeight
-    const expectedReps = exercise.startingReps+exercise.repProgression
-    const expectedIntensity = exercise.startingIntensity
+    const scheme = useCycleStore((state)=>state.workoutScheme)
+    const thisExercise = scheme.find((workout)=> workout.day === day)?.exercises[id]
 
-    const [targets, setTargets] = useState( {weight: expectedWeight,reps: expectedReps, intensity: expectedIntensity})
+    const [weight, setWeight] = useState(set[0].weight || exercise.startingWeight)
+    const [reps, setReps] = useState(exercise.weightProgression+exercise.startingReps)
+    const [int, setInt] = useState(exercise.weightProgression+exercise.startingIntensity)
+
+    const [theme, switchTheme] = [UseAppStateStore((state)=>state.theme), UseAppStateStore((state)=>state.switchTheme)]
+    const currTextColor = theme === 'Light'? 'black' : '#F3F3F3'
+    const currTheme = theme=== 'Light'? styles : darkstyles
+
     const repArr = Array(26).fill(5);
     for(let i in repArr){
         repArr[i] += Number(i)
@@ -33,16 +48,21 @@ export const ExerciseBlock = ({exercise, updateSet}: ExerciseBlockProps): JSX.El
             alignSelf: 'center',
             borderRadius: 8,
             borderWidth: 2,
-            borderColor: !done? '#F3F3F3': '#ECC640',
+            borderColor: !done? currTextColor: '#ECC640',
             flexDirection: 'row',
             alignItems: 'flex-start',
             flexWrap: 'wrap',
             padding: 10,
             margin: 5,
+            
             }}
             onPress={()=>{
-                setDone(!done)//highlight exercise as being done.
+                if(!done){
+                    setDone(true)//highlight exercise as being done.
+                }
+                updateTargets(weight, reps)
                 updateSet(set)
+                //console.log(set)
             }}
         >
 
@@ -54,45 +74,46 @@ export const ExerciseBlock = ({exercise, updateSet}: ExerciseBlockProps): JSX.El
                 <MyText 
                     align="left"
                     size={16}
-                    highlight={false}
+                    highlight={theme==='Light' ? false: 'white'}
                 >
                     {exercise.exercise.name}
                 </MyText>
             </View>
 
-            <View style={styles.exerciseInfo}>
+            <View style={currTheme.exerciseInfo}>
 
-                <View style={styles.exerciseInfoCol2}>
-                        <Text>
+                <View style={currTheme.exerciseInfoCol2}>
+                        <Text style={{color: currTextColor}}>
                             Weight: </Text>
                         <EditableInput 
-                            variable={String(expectedWeight)}
+                            variable={String(weight)}
                             onChangeText={(text)=>{
-                                setSet([])
+                                setWeight(Number(text))
                             }}
                             inputMode="numeric"
+                            defaultItem={String(thisExercise?.startingWeight || 0 + (thisExercise?.weightProgression || 0))}
                         />
                 </View>
 
-                <View style={styles.exerciseInfoCol2}>
-                        <Text>
+                <View style={currTheme.exerciseInfoCol2}>
+                        <Text style={{color: currTextColor}}> 
                              Reps: 
                         </Text>
                         <WeightSelect 
                             data={[1,2,3,4,5,6,7,8,9,10]} 
-                            defaultItem={expectedReps} 
-                            onSelect={()=>{
-                                //todo: set the new reps here
+                            defaultItem={reps} 
+                            onSelect={(item)=>{
+                                setReps(Number(item))
                             }}
                         />
                 </View>
                
             </View>
 
-            <View style={styles.exerciseBlockSet}>
-                <Text></Text>
-                <Text>Weight</Text>
-                <Text>Reps</Text>
+            <View style={currTheme.exerciseBlockSet}>
+                <Text style={{color: currTextColor}}></Text>
+                <Text style={{color: currTextColor}}>Weight</Text>
+                <Text style={{color: currTextColor}}>Reps</Text>
             </View>
             
             {//list of sets for each exercise based on the number of sets
@@ -100,16 +121,16 @@ export const ExerciseBlock = ({exercise, updateSet}: ExerciseBlockProps): JSX.El
                     return (
                     <View
                         key={i}
-                        style={styles.exerciseBlockSet}
+                        style={currTheme.exerciseBlockSet}
                     >   
                         <View>
-                        <Text>Set {i+1}</Text>
+                        <Text style={{color: currTextColor}}>Set {i+1}</Text>
                             <Pressable onPress={()=>{
                                 removeSet(exercise, exercise.currentWeek, i)
                                 setSet(set.filter((x:setInfo,j: number)=>i!==j))
                                 }}
                             >
-                                <Ionicons name="trash-outline" size={24} color="black" />
+                                <Ionicons name="trash-outline" size={24} color={currTextColor} />
                             </Pressable>
                         </View>
                         <View>
@@ -117,6 +138,7 @@ export const ExerciseBlock = ({exercise, updateSet}: ExerciseBlockProps): JSX.El
                             
                                 <TextInput
                                     placeholder={""+(currSet.weight? currSet.weight : exercise.startingWeight)}
+                                    placeholderTextColor={currTextColor}
                                     style={styles.exerciseInput}
                                     inputMode="numeric"
                                     onEndEditing={(e)=>{
@@ -137,7 +159,7 @@ export const ExerciseBlock = ({exercise, updateSet}: ExerciseBlockProps): JSX.El
                         <View>
                             <WeightSelect 
                                 data={repArr}
-                                defaultItem={expectedReps}
+                                defaultItem={reps}
                                 onSelect={(selectedItem: number)=>{
                                     setSet(set.map((set: setInfo, j: number)=>{
                                         if(i===j){
@@ -166,11 +188,11 @@ export const ExerciseBlock = ({exercise, updateSet}: ExerciseBlockProps): JSX.El
                 </View>
             </Pressable>
             
-             <View style={styles.exerciseInfoCol1}>
-                    <Text>Intensity: </Text>
+             <View style={currTheme.exerciseInfoCol1}>
+                    <Text style={{color: currTextColor}}>Intensity: </Text>
                     <WeightSelect 
                     data={[0,1,2,3,4,5,6,7,8,9,10]} 
-                    defaultItem={expectedIntensity} 
+                    defaultItem={int} 
                     onSelect={(selectedItem)=>{
                         setSet(set.map((set: setInfo, j: number)=>{
                             return {...set, intensity: Number(selectedItem)}
@@ -178,18 +200,33 @@ export const ExerciseBlock = ({exercise, updateSet}: ExerciseBlockProps): JSX.El
                         }))
                     }}/>
             </View>
+            <View style={currTheme.exerciseInfoCol2}>
+                
+                    <Pressable 
+                        onPress={()=>{
+                            if(!done) setDone(true);
+                        }}
+                    >
+                        <AreYouSure
+                            warning="Update this week's weight and reps?"
+                            action={()=>{
+                            
+                            updateTargets(weight, reps)
+                            }}
+                            exception={()=>{
+                                return false
+                            }}
+                            >
+                        <View style={{flexDirection: 'row', alignItems: 'center', gap: 10}}>
+                            <Text style={{color: currTextColor}}>Done</Text>
+                            <Ionicons name={done? "checkbox-sharp" : "checkbox-outline"} size={24} color="black" />
+                        </View>
+                        </AreYouSure>
+                        
+                    </Pressable>
 
-            <View style={styles.exerciseInfoCol2}>
-                <Pressable 
-                    style={{flexDirection: 'row', alignItems: 'center', gap: 10}}
-                    onPress={()=>{
-                        setDone(!done);
-                    }}
-                >
-                    <Text>Done</Text>
-                    <Ionicons name={done? "checkbox-sharp" : "checkbox-outline"} size={24} color="black" />
-                </Pressable>
-            </View>
+                </View>
+     
 
                 
         </Pressable>

@@ -3,7 +3,7 @@ import React from "react"
 export interface textProps{
     children: React.ReactNode
     size: number
-    highlight: true | false
+    highlight: true | false | 'white'
     align: 'center' | 'justify' | 'left' | 'right'
 }
 

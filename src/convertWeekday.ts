@@ -55,3 +55,31 @@ export const ConvertWeekdayTrunc = (date: number):string =>{
             return 'Mon'
     }
 }
+
+export const reverseWeekday = (date: string) =>{
+    switch (date){
+        case 'Mon': 
+            return 1;
+            break;
+        case 'Tues':
+            return 2;
+            break;
+        case 'Wed':
+            return 3;
+            break;
+        case 'Thurs':
+            return 4 ;
+            break;
+        case 'Fri':
+            return 5 ;
+            break;
+        case 'Sat':
+            return 6 ;
+            break;
+        case 'Sun':
+            return 7 ;
+            break;
+        default:
+            return 1
+    }
+}

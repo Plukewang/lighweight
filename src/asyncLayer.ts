@@ -1,13 +1,36 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { ExerciseProg, Workout, TrainingCycle, Trainingcycle, BuildTrainingCycle } from "./exercises";
 import { Exercise } from "../types/ui";
-import { useCycleListStore } from "./trainingCycleTemplateStore";
+import { readUserCycles } from "./readwrite";
 /**
  * Abstract layer for dealing with async storage.
  * This primarily focuses on storing client-side incomplete info like forms that haven't been !!!sent without any private information!!!
  */
-export const GetUser = () =>{
-    //return all user data TODO
+
+export const SyncWithOnline = async(override: boolean): Promise<string[]> =>{//use this when global app state is goes from online to offline mode.
+    //gets all the available cycles from the cloud
+    const keys = await AsyncStorage.getAllKeys();
+    const onlineNames: string[] = []
+    try{
+        const cycles = await readUserCycles();//get a list of trainingcycles
+        if (cycles.length===0) return []
+        for(const cycle of cycles){//merge them with existing cycles
+            let unconvertedName = cycle.name.replace(/([a-z])([A-Z])/g, '$1 $2')
+            if(override){
+                await AsyncStorage.setItem(cycle.name, JSON.stringify(cycle)) //just replace the item with the online one if we are overriding without saving.
+                
+            }else{
+                if(! keys.includes(cycle.name.replace(/([a-z])([A-Z])/g, '$1 $2'))){//save the current offline versions instead and update the cloud version. Also unconvert the name
+                    await AsyncStorage.setItem(unconvertedName, JSON.stringify(cycle))
+                }
+            }
+            onlineNames.push(unconvertedName)
+        }
+        return onlineNames
+    }catch(error){
+        console.log(error)
+        return []
+    }
 }
 
 

@@ -4,7 +4,9 @@
       [
         "expo-font",
         {
-          "fonts": ["./assets/fonts/Koulen-Regular.ttf"]
+          "fonts": [
+            "./assets/fonts/Koulen-Regular.ttf"
+          ]
         }
       ]
     ],
@@ -23,16 +25,23 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pluke.lightweight"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.pluke.lightweight"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "bfb7ff4e-e07e-4563-90ff-89007fca5d0d"
+      }
     }
   }
 }
